@@ -16,4 +16,11 @@ dependencies = [
 ]
 
 [tool.pyrefly]
-search-path = ["."]
+disable-search-path-heuristics = true
+search-path = ["src", "."]
+project-includes = ["src", "tests"]
+[errors]
+no-matching-overload = false
+
+[tool.pyrefly.errors]
+"no-matching-overload" = "ignore"
