@@ -4,6 +4,7 @@ import typing as tp
 
 from pathlib import Path
 
+import click
 import yaml  # type: ignore
 
 from aiogram import Bot, Dispatcher, F
@@ -23,8 +24,8 @@ def read_yaml(p: str) -> dict:
         return yaml.safe_load(file)
 
 
-def create_sticker_tool() -> Tool:
-    config = read_yaml('config/stickers.yaml')
+def create_sticker_tool(stickers_file: str) -> Tool:
+    config = read_yaml(stickers_file)
     data = [
         {
             'name': name,
@@ -34,12 +35,12 @@ def create_sticker_tool() -> Tool:
     return make_sticker_tool(data)
 
 
-def get_tools() -> list[Tool]:
+def get_tools(stickers_file: str) -> list[Tool]:
     return [
         write_to_chat,
         leave_chat,
         play_casino,
-        create_sticker_tool()
+        create_sticker_tool(stickers_file)
     ]
 
 
@@ -47,8 +48,8 @@ def tool_description_to_string(description: dict[str, tp.Any]) -> str:
     return json.dumps(description, indent=4)
 
 
-async def build_system_prompt(bot: Bot) -> str:
-    with open('config/system_prompt.txt', 'r', encoding='utf-8') as file:
+async def build_system_prompt(bot: Bot, system_prompt_file: str) -> str:
+    with open(system_prompt_file, 'r', encoding='utf-8') as file:
         content = file.read()
 
     me = await bot.me()
@@ -58,11 +59,41 @@ async def build_system_prompt(bot: Bot) -> str:
     )
 
 
-async def main() -> None:
+@click.command()
+@click.option(
+    '--system-prompt-file', type=click.Path(exists=True, dir_okay=False),
+    default='config/system_prompt.txt',
+    help='System prompt filepath'
+)
+@click.option(
+    '--stickers-config-file', type=click.Path(exists=True, dir_okay=False),
+    default='config/stickers.yaml',
+    help='Stickers configuration filepath',
+)
+@click.option(
+    '--config-file', type=click.Path(exists=True, dir_okay=False),
+    default='config/config.yaml',
+    help='Configuration filepath',
+)
+@click.option(
+    '--keys-file', type=click.Path(exists=True, dir_okay=False),
+    default='keys.yaml',
+    help='Path to file with private keys',
+)
+def sync_main(*args, **kwargs) -> None:
+    asyncio.run(main(*args, **kwargs))
+
+
+async def main(
+    system_prompt_file: str,
+    stickers_config_file: str,
+    config_file: str,
+    keys_file: str,
+) -> None:
     Path('logs').mkdir(exist_ok=True)
 
-    config = read_yaml('config/config.yaml')
-    keys = read_yaml('keys.yaml')
+    config = read_yaml(config_file)
+    keys = read_yaml(keys_file)
 
     bot = Bot(token=keys['telegram'])
     dp = Dispatcher()
@@ -72,7 +103,9 @@ async def main() -> None:
     )
     await context_manager.initialize_db()
 
-    tools = get_tools()
+    tools = get_tools(
+        stickers_file=stickers_config_file
+    )
     tools.append(as_tool(context_manager.update_context))
 
     print(f'Total: {len(tools)} tools')
@@ -92,7 +125,7 @@ async def main() -> None:
 
     app = Application(
         bot=bot,
-        system_prompt=await build_system_prompt(bot),
+        system_prompt=await build_system_prompt(bot, system_prompt_file),
         context_manager=context_manager,
         agent=agent,
         messages_limit=config['app']['messages_context_limit'],
@@ -105,4 +138,4 @@ async def main() -> None:
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    sync_main()
