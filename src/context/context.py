@@ -2,7 +2,6 @@ from src.types import ToolCallContext
 from abc import ABC, abstractmethod
 from collections import defaultdict
 
-from ..tools import as_tool
 from ..types import Message, ToolCallContext
 
 

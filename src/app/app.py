@@ -2,6 +2,7 @@ import asyncio
 
 from collections import defaultdict
 from datetime import datetime
+from logging import Logger
 
 import aiogram.types as at
 
@@ -10,11 +11,7 @@ from aiogram.utils.chat_action import ChatActionSender
 
 from ..agent import Agent
 from ..context import ChatContextManager
-from ..logging import setup_logger
 from ..types import Message, ToolCallContext
-
-
-_logger = setup_logger(__name__, 'logs/app.txt')
 
 
 class Application:
@@ -24,12 +21,14 @@ class Application:
         system_prompt: str,
         context_manager: ChatContextManager,
         agent: Agent,
+        logger: Logger,
         messages_limit: int = 20,
     ) -> None:
         self._bot = bot
         self._system_prompt = system_prompt
         self._context_manager = context_manager
         self._agent = agent
+        self._logger = logger
         self._message_queues = defaultdict(asyncio.Queue)  # type: ignore
         self._messages_limit = messages_limit
 
@@ -108,7 +107,7 @@ class Application:
                     new_messages
                 )
             except Exception:
-                _logger.exception(
+                self._logger.exception(
                     'Exception while executing agent'
                 )
 
