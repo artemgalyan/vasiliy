@@ -24,7 +24,7 @@ def read_yaml(p: str) -> dict:
 
 
 def create_sticker_tool() -> Tool:
-    config = read_yaml('config/stickers_cool.yaml')
+    config = read_yaml('config/stickers.yaml')
     data = [
         {
             'name': name,
@@ -48,7 +48,7 @@ def tool_description_to_string(description: dict[str, tp.Any]) -> str:
 
 
 async def build_system_prompt(bot: Bot) -> str:
-    with open('config/system_prompt_cool.txt', 'r', encoding='utf-8') as file:
+    with open('config/system_prompt.txt', 'r', encoding='utf-8') as file:
         content = file.read()
 
     me = await bot.me()
