@@ -12,6 +12,7 @@ from google import genai as ga
 from src.agent import GeminiAgent
 from src.app import Application
 from src.context import SQLiteChatContextManager
+from src.logging import setup_logger
 from src.tools import Tool, as_tool
 from src.tools.telegram import write_to_chat, leave_chat, \
     make_sticker_tool, play_casino
@@ -23,7 +24,7 @@ def read_yaml(p: str) -> dict:
 
 
 def create_sticker_tool() -> Tool:
-    config = read_yaml('config/stickers.yaml')
+    config = read_yaml('config/stickers_cool.yaml')
     data = [
         {
             'name': name,
@@ -47,7 +48,7 @@ def tool_description_to_string(description: dict[str, tp.Any]) -> str:
 
 
 async def build_system_prompt(bot: Bot) -> str:
-    with open('config/system_prompt.txt', 'r', encoding='utf-8') as file:
+    with open('config/system_prompt_cool.txt', 'r', encoding='utf-8') as file:
         content = file.read()
 
     me = await bot.me()
@@ -84,6 +85,7 @@ async def main() -> None:
         ),
         model_name=config['model']['name'],
         tools=tools,
+        logger=setup_logger('agent', 'logs/agent.txt'),
         generation_config=config['generation_config'],
         concurrency_limit=config['app']['concurrency_limit'],
     )
@@ -93,7 +95,8 @@ async def main() -> None:
         system_prompt=await build_system_prompt(bot),
         context_manager=context_manager,
         agent=agent,
-        messages_limit=config['app']['messages_context_limit']
+        messages_limit=config['app']['messages_context_limit'],
+        logger=setup_logger('application', 'logs/application.txt')
     )
 
     dp.message(F.text)(app.message_handler)
