@@ -4,6 +4,7 @@ import typing as tp
 from datetime import datetime
 
 from aiogram.enums.dice_emoji import DiceEmoji
+from aiogram.types import ReactionTypeEmoji
 
 from ..tool import as_tool
 from ...types import ToolCallContext, Message
@@ -125,3 +126,98 @@ def make_sticker_tool(sticker_descriptions: list[dict[str, str]]):
     doc += ', '.join(sticker_names)
     send_sticker.__doc__ = doc
     return as_tool(send_sticker)
+
+
+@as_tool
+async def create_poll(
+        question: str,
+        options: str,
+        context: ToolCallContext,
+        is_anonymous: bool = False,
+        allows_multiple_answers: bool = False,
+        allow_adding_options: bool = True,
+) -> None:
+    """
+    Creates a poll or a vote in the chat. Use this when you want to ask users for their opinion or run a survey.
+
+    :param question: The question to ask (e.g., "What is your favorite color?")
+    :param options: A list of options separated by commas (e.g., "Red, Green, Blue"). Provide between 2 and 10 options.
+    :param is_anonymous: If True, users will vote anonymously. Default is False.
+    :param allows_multiple_answers: If True, users can choose more than one option. Default is False.
+    :param allow_adding_options: If True, users can add their own poll options. Default is True.
+    """
+
+
+    options_list = [opt for opt in options.split(',')]
+
+    if is_anonymous:
+        allow_adding_options = False
+
+
+    poll_message = await context.bot.send_poll(
+        chat_id=context.chat_id,
+        question=question,
+        options=options_list,
+        is_anonymous=is_anonymous,
+        allows_multiple_answers=allows_multiple_answers,
+        allow_adding_options=allow_adding_options,
+    )
+
+    context.new_messages.append(Message.from_at_message(poll_message))
+
+
+@as_tool
+async def create_quiz(
+        question: str,
+        options: str,
+        correct_option_ids: str,
+        explanation: str,
+        context: ToolCallContext,
+        allows_multiple_answers: bool = False
+) -> None:
+    """
+    Creates a quiz in the chat. Use this when you want to ask users about something.
+
+    :param question: The question to ask (e.g., "What is the capital of the Belarus?")
+    :param options: A list of options separated by commas (e.g., "Moscow, Berlin, Minsk"). Provide between 2 and 12 options.
+    :param correct_option_ids: list of monotonically increasing 0-based identifiers of the correct answer options (e.g., "0, 3, 5")
+    :param explanation: Text that is shown when a user chooses an incorrect answer 0-200 characters
+    :param allows_multiple_answers: If True, users can choose more than one option. Default is False.
+    """
+
+
+    options_list = [opt for opt in options.split(',')]
+    correct_option_ids = [ans for ans in correct_option_ids.split(',')]
+
+
+    poll_message = await context.bot.send_poll(
+        chat_id=context.chat_id,
+        question=question,
+        options=options_list,
+        correct_option_ids=correct_option_ids,
+        explanation=explanation,
+        allows_multiple_answers=allows_multiple_answers,
+        type="quiz"
+    )
+
+    context.new_messages.append(Message.from_at_message(poll_message))
+
+
+@as_tool
+async def react_to_message(
+        message_id: int,
+        reaction: tp.Literal['👍', '👎', '❤', '🔥', '🤔', '🤡','🥰', '🐳','😭', '🤯', '🎉', '💊'],
+        context: ToolCallContext
+) -> None:
+    """
+    Sets a reaction (emoji) on a specific message. Show agreement/disagreement, or express emotion.
+
+    :param message_id: The ID of the message to react to.
+    :param reaction: The emoji to use as a reaction.
+    """
+
+    await context.bot.set_message_reaction(
+        chat_id=context.chat_id,
+        message_id=message_id,
+        reaction=[ReactionTypeEmoji(emoji=reaction)]
+    )
