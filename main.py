@@ -98,7 +98,7 @@ async def main(
     config = read_yaml(config_file)
     keys = get_keys()
 
-    bot = Bot(token=keys.telegram)
+    bot = Bot(token=keys['telegram'])
     dp = Dispatcher()
 
     context_manager = SQLiteChatContextManager(
@@ -117,7 +117,7 @@ async def main(
 
     agent = GeminiAgent(
         client=ga.Client(
-            api_key=keys.gemini
+            api_key=keys['gemini']
         ),
         model_name=config['model']['name'],
         tools=tools,
