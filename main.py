@@ -1,4 +1,5 @@
 import asyncio
+import os
 import json
 import typing as tp
 
@@ -17,11 +18,19 @@ from src.logging import setup_logger
 from src.tools import Tool, as_tool
 from src.tools.telegram import write_to_chat, leave_chat, \
     make_sticker_tool, play_casino
+from src.utils import dotdict
 
 
 def read_yaml(p: str) -> dict:
     with open(p, 'r') as file:
         return yaml.safe_load(file)
+
+
+def get_keys() -> dict[str, str]:
+    return dotdict({
+        'gemini': os.environ['GEMINI_API_KEY'],
+        'telegram': os.environ['TELEGRAM_API_BOT_KEY'],
+    })
 
 
 def create_sticker_tool(stickers_file: str) -> Tool:
@@ -75,11 +84,6 @@ async def build_system_prompt(bot: Bot, system_prompt_file: str) -> str:
     default='config/config.yaml',
     help='Configuration filepath',
 )
-@click.option(
-    '--keys-file', type=click.Path(exists=True, dir_okay=False),
-    default='keys.yaml',
-    help='Path to file with private keys',
-)
 def sync_main(*args, **kwargs) -> None:
     asyncio.run(main(*args, **kwargs))
 
@@ -88,14 +92,13 @@ async def main(
     system_prompt_file: str,
     stickers_config_file: str,
     config_file: str,
-    keys_file: str,
 ) -> None:
     Path('logs').mkdir(exist_ok=True)
 
     config = read_yaml(config_file)
-    keys = read_yaml(keys_file)
+    keys = get_keys()
 
-    bot = Bot(token=keys['telegram'])
+    bot = Bot(token=keys.telegram)
     dp = Dispatcher()
 
     context_manager = SQLiteChatContextManager(
@@ -114,7 +117,7 @@ async def main(
 
     agent = GeminiAgent(
         client=ga.Client(
-            api_key=keys['gemini']
+            api_key=keys.gemini
         ),
         model_name=config['model']['name'],
         tools=tools,

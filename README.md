@@ -6,11 +6,10 @@ This project is an example of a chatbot based on agentic AI.
 
 1. Install ```uv```
 2. Run ```uv sync``` in the repo root
-3. Obtain Gemini API and Telegram API keys. Make a ```keys.yaml``` file with the following structure:
-
-```
-telegram: <TELEGRAM TOKEN>
-gemini: <GEMINI TOKEN>
+3. Obtain Gemini API and Telegram API keys. Set environment variables GEMINI_API_KEY and TELEGRAM_API_BOT_KEY:
+```bash
+export GEMINI_API_KEY=<YOUR GEMINI API KEY>
+export TELEGRAM_API_BOT_KEY=<YOUR TELEGRAM BOT API KEY>
 ```
 4. Run the bot: ```uv run main.py```
 
