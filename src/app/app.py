@@ -18,6 +18,7 @@ class Application:
     def __init__(
         self,
         bot: Bot,
+        bot_name: str,
         system_prompt: str,
         context_manager: ChatContextManager,
         agent: Agent,
@@ -25,6 +26,7 @@ class Application:
         messages_limit: int = 20,
     ) -> None:
         self._bot = bot
+        self._bot_name = bot_name
         self._system_prompt = system_prompt
         self._context_manager = context_manager
         self._agent = agent
@@ -96,7 +98,8 @@ class Application:
             bot=self._bot,
             chat_id=chat_id,
             context=context,
-            new_messages=[]
+            new_messages=[],
+            bot_name=self._bot_name,
         )
         async with ChatActionSender.typing(
             chat_id=chat_id, bot=self._bot

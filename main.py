@@ -128,6 +128,7 @@ async def main(
 
     app = Application(
         bot=bot,
+        bot_name=(await bot.get_me()).full_name,
         system_prompt=await build_system_prompt(bot, system_prompt_file),
         context_manager=context_manager,
         agent=agent,
