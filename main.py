@@ -10,6 +10,7 @@ import yaml  # type: ignore
 
 from aiogram import Bot, Dispatcher, F
 from google import genai as ga
+from prometheus_client import start_http_server
 
 from src.agent import GeminiAgent
 from src.app import Application
@@ -97,6 +98,12 @@ async def main(
 
     config = read_yaml(config_file)
     keys = get_keys()
+
+    if (
+        prometheus_port := config.get('metrics', {})
+            .get('prometheus_port', None)
+    ) is not None:
+        start_http_server(prometheus_port)
 
     bot = Bot(token=keys['telegram'])
     dp = Dispatcher()

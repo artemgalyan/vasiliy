@@ -8,3 +8,5 @@ database:
 app:
   messages_context_limit: 30
   concurrency_limit: 4
+metrics:
+  prometheus_port: 8000
