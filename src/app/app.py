@@ -1,7 +1,6 @@
 import asyncio
 
 from collections import defaultdict
-from datetime import datetime
 from logging import Logger
 
 import aiogram.types as at
@@ -9,6 +8,7 @@ import aiogram.types as at
 from aiogram import Bot
 from aiogram.utils.chat_action import ChatActionSender
 
+from .message_processing import prepare_input_prompt
 from ..agent import Agent
 from ..context import ChatContextManager
 from ..metrics import RequestsProcessed, RequestProcessingStatus
@@ -50,31 +50,17 @@ class Application:
             chat_id, self._messages_limit - n_new_messages
         )
 
-    def _format_message(self, message: Message) -> str:
-        return f'[{message.timestamp} {message.sender_name} ' \
-            f'(@{message.sender_shortname}): {message.text}]'
-
     async def _execute_agent(
         self,
         context: ToolCallContext,
-        previos_messages: list[Message],
+        previous_messages: list[Message],
         new_messages: list[Message],
     ) -> None:
-        prompt = '\n'.join([
-            f'Time: {datetime.now()}',
-            '## Chat context:',
-            context.context or 'The context is empty. Use update_context tool to update it',
-            '## Previous messages',
-            *[
-                self._format_message(message)
-                for message in previos_messages
-            ],
-            '## New messages',
-            *[
-                self._format_message(message)
-                for message in new_messages
-            ]
-        ])
+        prompt = prepare_input_prompt(
+            new_messages,
+            previous_messages,
+            context
+        )
         try:
             await self._agent.execute(
                 system_prompt=self._system_prompt,
@@ -129,7 +115,7 @@ class Application:
         await self._context_manager.append_messages(
             chat_id, new_messages + tool_call_context.new_messages
         )
-            
+
     async def message_handler(self, message: at.Message) -> None:
         chat_id = message.chat.id
         msg = Message.from_at_message(message)
