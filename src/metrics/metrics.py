@@ -18,6 +18,9 @@ class ToolCallStatus(Enum):
         return ToolCallStatus.Failure
 
 
+RequestProcessingStatus = ToolCallStatus
+
+
 TokenUsage = Counter(
     'token_usage',
     'Cumulative token usage',
@@ -40,4 +43,9 @@ ToolCalls = Counter(
 RequestProcessingTime = Gauge(
     'request_processing_time',
     'Time needed to process a request, sec'
+)
+RequestsProcessed = Counter(
+    'request_processed',
+    'Number of request processed',
+    ['agent_name', 'result'],
 )

@@ -11,6 +11,7 @@ from aiogram.utils.chat_action import ChatActionSender
 
 from ..agent import Agent
 from ..context import ChatContextManager
+from ..metrics import RequestsProcessed, RequestProcessingStatus
 from ..types import Message, ToolCallContext
 
 
@@ -74,11 +75,22 @@ class Application:
                 for message in new_messages
             ]
         ])
-        await self._agent.execute(
-            system_prompt=self._system_prompt,
-            prompt=prompt,
-            context=context,
-        )
+        try:
+            await self._agent.execute(
+                system_prompt=self._system_prompt,
+                prompt=prompt,
+                context=context,
+            )
+            RequestsProcessed.labels(
+                agent_name=self._bot_name,
+                result=RequestProcessingStatus.Success.value,
+            ).inc()
+        except Exception:
+            RequestsProcessed.labels(
+                agent_name=self._bot_name,
+                result=RequestProcessingStatus.Failure.value,
+            ).inc()
+            raise
 
     async def _process_chat_updates(self, chat_id: int) -> None:
         message_queue = self._message_queues[chat_id]

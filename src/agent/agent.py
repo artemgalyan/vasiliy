@@ -7,7 +7,7 @@ from logging import Logger
 
 from google import genai as ga
 
-from .metrics import TokenType, ToolCallStatus, TokenUsage, MoneySpent, \
+from ..metrics import TokenType, ToolCallStatus, TokenUsage, MoneySpent, \
     CachedTokens, ToolCalls, RequestProcessingTime
 from ..tools import Tool
 from ..types import ToolCallContext
@@ -132,7 +132,7 @@ class GeminiAgent(Agent):
             type=TokenType.Output.value
         ).inc(output_tokens)
         CachedTokens.labels(**token_usage_labels).inc(cached_tokens)
-        RequestProcessingTime.inc(
+        RequestProcessingTime.set(
             (processing_finish - processing_start).total_seconds()
         )
 
