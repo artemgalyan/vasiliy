@@ -7,8 +7,8 @@ from logging import Logger
 
 from google import genai as ga
 
-from ..metrics import TokenType, ToolCallStatus, TokenUsage, MoneySpent, \
-    CachedTokens, ToolCalls, RequestProcessingTime
+from ..metrics import ToolCallStatus, ToolCalls, RequestProcessingTime, \
+    TokenLogger
 from ..tools import Tool
 from ..types import ToolCallContext
 
@@ -51,6 +51,7 @@ class GeminiAgent(Agent):
         model_name: str,
         tools: list[Tool],
         logger: Logger,
+        token_logger_factory: tp.Callable[[], TokenLogger],
         generation_config: dict[str, tp.Any] | None = None,
         sleep_time: float = 0.3,
         concurrency_limit: int = 4,
@@ -60,6 +61,7 @@ class GeminiAgent(Agent):
         self._client = client
         self._model_name = model_name
         self._tools = tools
+        self._token_logger_factory = token_logger_factory
         self._generation_config = generation_config
         self._sleep_time = sleep_time
         self._concurrency_limit = concurrency_limit
@@ -77,10 +79,8 @@ class GeminiAgent(Agent):
         context: ToolCallContext
     ) -> None:
         async with self._semaphore:
+            token_logger = self._token_logger_factory()
             processing_start = datetime.now()
-            input_tokens = 0
-            output_tokens = 0
-            cached_tokens = 0
             interaction = await self._client.aio.interactions.create(
                 model=self._model_name,
                 input=prompt,
@@ -93,9 +93,11 @@ class GeminiAgent(Agent):
             )  # type: ignore  # pyrefly: ignore
             while True:
                 usage = interaction.usage
-                input_tokens += usage.total_input_tokens or 0
-                output_tokens += usage.total_output_tokens or 0
-                cached_tokens += usage.total_cached_tokens or 0
+                token_logger.add_usage(
+                    usage.total_input_tokens or 0,
+                    usage.total_output_tokens or 0,
+                    usage.total_cached_tokens or 0
+                )
                 if not interaction.outputs:
                     break
 
@@ -119,22 +121,10 @@ class GeminiAgent(Agent):
                 await sleep(self._sleep_time)
 
         processing_finish = datetime.now()
-        token_usage_labels = dict(
-            model=self._model_name,
-            agent_name=context.bot_name,
-        )
-        TokenUsage.labels(
-            **token_usage_labels,
-            type=TokenType.Input.value
-        ).inc(input_tokens)
-        TokenUsage.labels(
-            **token_usage_labels,
-            type=TokenType.Output.value
-        ).inc(output_tokens)
-        CachedTokens.labels(**token_usage_labels).inc(cached_tokens)
         RequestProcessingTime.set(
             (processing_finish - processing_start).total_seconds()
         )
+        token_logger.log_usage()
 
     async def _process_interaction(
         self,

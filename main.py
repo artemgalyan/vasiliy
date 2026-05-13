@@ -16,6 +16,7 @@ from src.agent import GeminiAgent
 from src.app import Application
 from src.context import SQLiteChatContextManager
 from src.logging import setup_logger
+from src.metrics import TokenLogger
 from src.tools import Tool, as_tool
 from src.tools.telegram import write_to_chat, leave_chat, \
     make_sticker_tool, play_casino
@@ -56,6 +57,17 @@ def get_tools(stickers_file: str) -> list[Tool]:
 
 def tool_description_to_string(description: dict[str, tp.Any]) -> str:
     return json.dumps(description, indent=4)
+
+
+def load_pricing_config(pricing_config: dict[str, float]) -> dict[str, float]:
+    return {
+        key: pricing_config.get(key, 0) / 1e6
+        for key in [
+            'input_token_price',
+            'output_token_price',
+            'cached_token_price',
+        ]
+    }
 
 
 async def build_system_prompt(bot: Bot, system_prompt_file: str) -> str:
@@ -122,20 +134,27 @@ async def main(
     for tool in tools:
         print(tool_description_to_string(tool.description))
 
+    model_name = config['model']['name']
+    bot_name = (await bot.get_me()).full_name
     agent = GeminiAgent(
         client=ga.Client(
             api_key=keys['gemini']
         ),
-        model_name=config['model']['name'],
+        model_name=model_name,
         tools=tools,
         logger=setup_logger('agent', 'logs/agent.txt'),
+        token_logger_factory=lambda: TokenLogger(
+            model_name=model_name,
+            bot_name=bot_name,
+            **load_pricing_config(config['model']['pricing'])
+        ),
         generation_config=config['generation_config'],
         concurrency_limit=config['app']['concurrency_limit'],
     )
 
     app = Application(
         bot=bot,
-        bot_name=(await bot.get_me()).full_name,
+        bot_name=bot_name,
         system_prompt=await build_system_prompt(bot, system_prompt_file),
         context_manager=context_manager,
         agent=agent,

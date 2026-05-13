@@ -1,5 +1,8 @@
 model:
   name: gemini-3.1-flash-lite-preview
+  pricing:
+    input_token_price: 0.45
+    output_token_price: 2.7
 generation_config:
   thinking_level: medium
   max_output_tokens: 1000000

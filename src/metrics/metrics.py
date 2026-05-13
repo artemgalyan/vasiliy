@@ -5,6 +5,7 @@ from prometheus_client import Counter, Gauge
 class TokenType(Enum):
     Input = 'input'
     Output = 'output'
+    Cached = 'cached'
 
 
 class ToolCallStatus(Enum):
@@ -29,6 +30,7 @@ TokenUsage = Counter(
 MoneySpent = Counter(
     'money_spent',
     'Amount of money spent on tokens',
+    ['model', 'agent_name', 'category'],
 )
 CachedTokens = Counter(
     'cached_token_usage',
