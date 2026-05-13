@@ -42,6 +42,7 @@ class ToolCallContext:
     chat_id: int
     context: str
     new_messages: list[Message]
+    bot_name: str
 
 
 __all__ = [
