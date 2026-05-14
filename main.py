@@ -162,7 +162,7 @@ async def main(
         logger=setup_logger('application', 'logs/application.txt')
     )
 
-    dp.message(F.text)(app.message_handler)
+    dp.message()(app.message_handler)
 
     await dp.start_polling(bot)
 

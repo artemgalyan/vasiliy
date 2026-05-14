@@ -5,6 +5,7 @@ import aiogram.types as at
 
 from aiogram import Bot
 
+from .messages_converter import format_telegram_message
 from ..utils import dotdict
 
 
@@ -32,7 +33,7 @@ class Message:
             sender_shortname=from_user.username or '',  # type: ignore
             timestamp=message.date,
             message_id=message.message_id,
-            text=message.text or '',
+            text=format_telegram_message(message),
         )
 
 
