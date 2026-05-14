@@ -1,4 +1,5 @@
 import asyncio
+import json
 import typing as tp
 
 from datetime import datetime
@@ -72,11 +73,14 @@ async def play_casino(
     outcome, is_jackpot, is_win = parse_slots(score.dice.value)
 
     context.new_messages.append(Message(
-        sender_name='Slot machine',
+        sender_name=context.bot_name,
         sender_shortname='',
         timestamp=datetime.now(),
         message_id=-1,
-        text=outcome,
+        text=json.dumps({
+            'text': '🎰',
+            'system': 'Slots result: ' + outcome
+        }),
     ))
     return outcome
 

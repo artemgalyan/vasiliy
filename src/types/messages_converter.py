@@ -6,6 +6,7 @@ import aiogram.types as at
 from ..utils import parse_dice_output
 
 
+
 def format_telegram_message(message: at.Message) -> str:
     result: dict[str, tp.Any] = dict()
     if (text := message.text) is not None:
