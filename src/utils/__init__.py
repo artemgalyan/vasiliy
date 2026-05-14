@@ -53,8 +53,7 @@ def parse_dice_output(emoji: str, value: int) -> str:
             return "Invalid value for slots"
 
         reels, is_jackpot, is_match = parse_slots(value)
-        status = "JACKPOT! 🎉" if is_jackpot else ("Match!" if is_match else "No match")
-        return f"Slot Result: [{reels}] - {status}"
+        return f"Slot Result: [{reels}]"
 
     return "Unknown emoji type"
 
