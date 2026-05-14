@@ -61,22 +61,11 @@ class Application:
             previous_messages,
             context
         )
-        try:
-            await self._agent.execute(
-                system_prompt=self._system_prompt,
-                prompt=prompt,
-                context=context,
-            )
-            RequestsProcessed.labels(
-                agent_name=self._bot_name,
-                result=RequestProcessingStatus.Success.value,
-            ).inc()
-        except Exception:
-            RequestsProcessed.labels(
-                agent_name=self._bot_name,
-                result=RequestProcessingStatus.Failure.value,
-            ).inc()
-            raise
+        await self._agent.execute(
+            system_prompt=self._system_prompt,
+            prompt=prompt,
+            context=context,
+        )
 
     async def _process_chat_updates(self, chat_id: int) -> None:
         message_queue = self._message_queues[chat_id]
@@ -117,6 +106,20 @@ class Application:
         )
 
     async def message_handler(self, message: at.Message) -> None:
+        try:
+            await self._handle_message(message)
+            RequestsProcessed.labels(
+                agent_name=self._bot_name,
+                result=RequestProcessingStatus.Success.value,
+            ).inc()
+        except Exception:
+            RequestsProcessed.labels(
+                agent_name=self._bot_name,
+                result=RequestProcessingStatus.Failure.value,
+            ).inc()
+            raise
+
+    async def _handle_message(self, message: at.Message) -> None:
         chat_id = message.chat.id
         msg = Message.from_at_message(message)
 
