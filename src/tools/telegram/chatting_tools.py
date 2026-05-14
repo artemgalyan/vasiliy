@@ -7,6 +7,7 @@ from aiogram.enums.dice_emoji import DiceEmoji
 
 from ..tool import as_tool
 from ...types import ToolCallContext, Message
+from ...utils import parse_slots
 
 
 @as_tool
@@ -51,19 +52,6 @@ async def reply_to_message(
         message,
         reply_to_message_id=message_id
     )
-
-
-def parse_slots(dice_value: int) -> dict[str, tp.Any]:
-    val = dice_value - 1
-    
-    symbols = ['➖', '🍇', '🍋', '7️⃣']
-    
-    reel_1 = val % 4           # Left reel
-    reel_2 = (val // 4) % 4    # Middle reel
-    reel_3 = (val // 16) % 4   # Right reel
-    
-    return ''.join([symbols[reel_1], symbols[reel_2], symbols[reel_3]]), \
-        dice_value == 64, reel_1 == reel_2 == reel_3
 
 
 @as_tool
