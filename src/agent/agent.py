@@ -113,6 +113,10 @@ class GeminiAgent(Agent):
                         model=self._model_name,
                         previous_interaction_id=interaction.id,
                         input=function_results,  # type: ignore
+                        tools=[
+                            tool.description
+                            for tool in self._tools
+                        ],
                     )  # pyrefly: ignore
                 )
                 if interaction is None:

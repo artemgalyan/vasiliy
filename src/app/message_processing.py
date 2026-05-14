@@ -1,21 +1,13 @@
-import json
-
 from datetime import datetime
 
 from ..types import Message, ToolCallContext
 
 
-def format_message(message: Message) -> dict:
-    if message.text[0] not in ['"', '{', ']']:
-        content = message.text
-    else:
-        content = json.loads(message.text)
-    return {
-        'sender': message.sender_name,
-        'sender_shortname': '@' + message.sender_shortname,
-        'timestamp': str(message.timestamp),
-        'content': content
-    }
+def format_message(message: Message) -> str:
+    shortname = f'(@{message.sender_shortname})' \
+        if message.sender_shortname else ''
+    return f'[{message.timestamp} {message.sender_name} ' \
+        f'{shortname}: {message.text}]'
 
 
 def prepare_input_prompt(
@@ -28,13 +20,13 @@ def prepare_input_prompt(
         '## Chat context:',
         context.context or 'The context is empty. Use update_context tool to update it',
         '## Previous messages',
-        json.dumps([
+        *[
             format_message(message)
             for message in previous_messages
-        ]),
+        ],
         '## New messages',
-        json.dumps([
+        *[
             format_message(message)
             for message in new_messages
-        ])
+        ]
     ])

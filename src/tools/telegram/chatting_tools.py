@@ -60,7 +60,7 @@ async def play_casino(
     context: ToolCallContext
 ) -> str:
     """
-    Run a slot-machine. You can get following results: JACKPOT! You got 777!; Big Win! You matched 3 symbols!; You lost. Better luck next time.
+    Run a slot-machine. You will get 3 symbols corresponding to the result of the game
     Use this function to run a slot-machine or a casino
     """
 
