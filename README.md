@@ -1,6 +1,6 @@
 # Vasiliy 2.0
 
-This project is an example of a chatbot based on agentic AI.
+This project is an example of a telegram chatbot based on agentic AI. Make sure to have some fun with the bot!
 
 # Installation guide
 

@@ -1,1 +1,0 @@
-prometheus --config.file=prometheus.yml & grafana server
