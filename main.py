@@ -97,6 +97,10 @@ async def build_system_prompt(bot: Bot, system_prompt_file: str) -> str:
     default='config/config.yaml',
     help='Configuration filepath',
 )
+@click.option(
+    '--no-prometheus-logging', is_flag=True,
+    help='Use this flag if you want to disable prometheus logging',
+)
 def sync_main(*args, **kwargs) -> None:
     asyncio.run(main(*args, **kwargs))
 
@@ -105,6 +109,7 @@ async def main(
     system_prompt_file: str,
     stickers_config_file: str,
     config_file: str,
+    no_prometheus_logging: bool,
 ) -> None:
     Path('logs').mkdir(exist_ok=True)
 
@@ -114,7 +119,7 @@ async def main(
     if (
         prometheus_port := config.get('metrics', {})
             .get('prometheus_port', None)
-    ) is not None:
+    ) is not None and not no_prometheus_logging:
         start_http_server(prometheus_port)
 
     bot = Bot(token=keys['telegram'])
